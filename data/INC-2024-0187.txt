@@ -1,0 +1,34 @@
+REGISTRO DE INCIDENCIA - EXPORTACIÓN GMAO NORVENT
+=================================================
+Nº incidencia ........ INC-2024-0187
+Fecha/hora apertura .. 12/03/2024 07:42
+Planta ............... Zaragoza (PZ1)
+Área ................. Línea 3 - Banco de pruebas final
+Abierta por .......... J. Lasheras (jefe de turno, turno de mañana)
+Severidad inicial .... S2
+Estado ............... Escalada a Ingeniería de Calidad
+
+DESCRIPCIÓN
+Durante la prueba funcional de fin de línea, el compresor con nº de serie
+24A-1143 ha dado lecturas de vibración de 11,2 mm/s RMS en el rodamiento del
+lado de accionamiento, frente a los 4-5 mm/s habituales en este modelo. El
+controlador NO ha disparado alarma. Al repetir la prueba a los 20 minutos la
+temperatura en la zona del cojinete sube a 94 ºC y se aprecia ruido metálico
+intermitente.
+
+Se revisan las unidades del mismo turno y de los dos días anteriores en el
+banco: 13 unidades más presentan valores entre 8,6 y 10,9 mm/s. Todas son
+NV-2240 del rango de serie 24A-1100 a 24A-1180.
+
+ACCIONES INMEDIATAS
+- Retenidas en almacén de producto terminado las 14 unidades identificadas.
+- Consultado a logística: 3 unidades del mismo rango (24A-1102, 24A-1107 y
+  24A-1115) ya salieron el 08/03/2024 hacia la planta de Monterrey (PMX).
+- Se mantiene la línea en marcha con prueba de vibración al 100 % mientras
+  Ingeniería analiza.
+
+COMENTARIOS
+13/03/2024 09:10 - M. Ferrer (Calidad): se solicita análisis de causa raíz.
+Retiramos dos unidades para desmontaje. Pendiente de informe técnico.
+13/03/2024 16:30 - J. Lasheras: sin nuevas unidades fuera de rango en el turno
+de tarde tras cambiar a rodamientos de stock antiguo en la estación 3.4.
