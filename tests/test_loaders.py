@@ -48,3 +48,9 @@ def test_scanned_pdf_falls_back_to_ocr():
 
     assert len(pages) == 1
     assert "Escalado de incidencias" in pages[0].text
+
+
+def test_pdf_table_rows_carry_column_names():
+    pages = load_document(config.DATA_DIR / "politica_permisos_retribuidos_grupo_norvent_2024.pdf")
+
+    assert any(p.text == "Fallecimiento de abuelo/a · Chile: 1" for p in pages)

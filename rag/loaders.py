@@ -1,5 +1,6 @@
 """Lectura de documentos en distintos formatos como texto plano."""
 
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
@@ -46,10 +47,31 @@ def load_document(path: Path) -> list[PageText]:
 def _load_pdf(path: Path) -> list[PageText]:
     reader = PdfReader(str(path))
     pages = []
+    header = None
     for number, page in enumerate(reader.pages, start=1):
-        text = (page.extract_text() or "").strip() or _image_page_to_text(page)
-        if text:
-            pages.append(PageText(text=text, page=number))
+        layout = (page.extract_text(extraction_mode="layout") or "").strip()
+        if not layout:
+            text = _image_page_to_text(page)
+            if text:
+                pages.append(PageText(text=text, page=number))
+            continue
+
+        # ponytail: table = columns split by 2+ spaces in layout mode; breaks on empty or
+        # multi-line cells, pdfplumber extract_tables is the upgrade path
+        prose = []
+        for line in layout.splitlines():
+            cells = re.split(r"\s{2,}", line.strip())
+            if header is None and len(cells) >= 4 and not any(c.isdigit() for c in line):
+                header = cells
+            elif header and len(cells) >= len(header) - 1:
+                # one short text per cell: whole rows look alike to the embedding model
+                for column, value in zip(header[2:], cells[2:]):
+                    text = f"{cells[1]} · {column}: {value}"
+                    pages.append(PageText(text=text, page=number))
+            elif line.strip():
+                prose.append(" ".join(line.split()))
+        if prose:
+            pages.append(PageText(text="\n".join(prose), page=number))
     return pages
 
 
