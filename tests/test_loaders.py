@@ -1,7 +1,9 @@
+import shutil
 from pathlib import Path
 
 import pytest
 
+import config
 from rag.loaders import DocumentLoadError, load_document
 
 
@@ -38,3 +40,13 @@ def test_load_unsupported_format_raises(tmp_path: Path):
 
     with pytest.raises(DocumentLoadError):
         load_document(file_path)
+
+
+@pytest.mark.skipif(not shutil.which("tesseract"), reason="requiere el binario tesseract")
+def test_scanned_pdf_falls_back_to_ocr(monkeypatch):
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+
+    pages = load_document(config.DATA_DIR / "PRO-OPS-007_escalado_incidencias_rev3.pdf")
+
+    assert len(pages) == 1
+    assert "Escalado de incidencias" in pages[0].text

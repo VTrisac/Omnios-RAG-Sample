@@ -1,11 +1,19 @@
 """Lectura de documentos en distintos formatos como texto plano."""
 
+import base64
+import io
+import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
+import anthropic
+import pytesseract
 from docx import Document as DocxDocument
+from PIL import Image
 from pypdf import PdfReader
+
+import config
 
 
 @dataclass
@@ -44,10 +52,53 @@ def _load_pdf(path: Path) -> list[PageText]:
     reader = PdfReader(str(path))
     pages = []
     for number, page in enumerate(reader.pages, start=1):
-        text = (page.extract_text() or "").strip()
+        text = (page.extract_text() or "").strip() or _image_page_to_text(page)
         if text:
             pages.append(PageText(text=text, page=number))
     return pages
+
+
+def _image_page_to_text(page) -> str:
+    """Página sin capa de texto (escaneo, diagrama): visión con Claude si hay API key; si no, OCR."""
+    images = [img.image for img in page.images]
+    if not images:
+        return ""
+    if os.environ.get("ANTHROPIC_API_KEY"):
+        try:
+            text = _describe_with_claude(images)
+        except anthropic.APIError:
+            text = ""  # ponytail: degrade to OCR instead of losing the page
+        if text:
+            return text
+    return "\n".join(
+        pytesseract.image_to_string(image, lang=config.OCR_LANG) for image in images
+    ).strip()
+
+
+def _describe_with_claude(images: list[Image.Image]) -> str:
+    content = []
+    for image in images:
+        buffer = io.BytesIO()
+        image.convert("RGB").save(buffer, format="JPEG", quality=90)
+        content.append(
+            {
+                "type": "image",
+                "source": {
+                    "type": "base64",
+                    "media_type": "image/jpeg",
+                    "data": base64.standard_b64encode(buffer.getvalue()).decode(),
+                },
+            }
+        )
+    content.append({"type": "text", "text": config.VISION_PROMPT})
+    response = anthropic.Anthropic().messages.create(
+        model=config.VISION_MODEL,
+        max_tokens=16000,
+        messages=[{"role": "user", "content": content}],
+    )
+    if response.stop_reason == "refusal":
+        return ""
+    return "\n".join(b.text for b in response.content if b.type == "text").strip()
 
 
 def _load_docx(path: Path) -> list[PageText]:

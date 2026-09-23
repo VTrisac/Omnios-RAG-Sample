@@ -9,6 +9,7 @@ python run.py "¿Cuál es el código de proveedor de Electromotores del Ebro?"
 python run.py "¿Por qué se realizó la auditoría extraordinaria a Rodatec Levante?"
 python run.py "¿Quién es la autora del informe técnico IT-2024-041?"
 python run.py "¿Qué no conformidad mayor tiene Iberflex por el uso de un compuesto NBR no aprobado?"
+python run.py "¿Qué dice el procedimiento PRO-OPS-007 de escalado de incidencias en línea de producción?"
 ```
 
 | Pregunta | Documento esperado en el resultado #1 |
@@ -17,3 +18,4 @@ python run.py "¿Qué no conformidad mayor tiene Iberflex por el uso de un compu
 | ¿Por qué se realizó la auditoría extraordinaria a Rodatec Levante? | `auditoria_proveedor_rodatec_2024.md` |
 | ¿Quién es la autora del informe técnico IT-2024-041? | `IT-2024-041_informe_tecnico.pdf` |
 | ¿Qué no conformidad mayor tiene Iberflex por el uso de un compuesto NBR no aprobado? | `auditoria_proveedor_iberflex_2024.pdf` |
+| ¿Qué dice el procedimiento PRO-OPS-007 de escalado de incidencias en línea de producción? | `PRO-OPS-007_escalado_incidencias_rev3.pdf` |

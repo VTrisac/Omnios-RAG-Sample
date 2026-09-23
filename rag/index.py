@@ -89,6 +89,8 @@ def build_index() -> None:
                     )
                 )
                 position += 1
+        if position == 0:
+            console.print(f"[yellow]Aviso:[/yellow] '{rel_name}' no tiene texto extraíble; no se indexa.")
 
     if not chunks:
         raise ValueError("Los documentos de 'data/' no contienen texto extraíble.")
