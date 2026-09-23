@@ -48,6 +48,7 @@ def _load_pdf(path: Path) -> list[PageText]:
     reader = PdfReader(str(path))
     pages = []
     header = None
+    rows = []  # (page, cells) of the whole document: additive rows may come after their base
     for number, page in enumerate(reader.pages, start=1):
         layout = (page.extract_text(extraction_mode="layout") or "").strip()
         if not layout:
@@ -56,26 +57,53 @@ def _load_pdf(path: Path) -> list[PageText]:
                 pages.append(PageText(text=text, page=number))
             continue
 
-        # ponytail: table = columns split by 2+ spaces in layout mode; breaks on empty or
-        # multi-line cells, pdfplumber extract_tables is the upgrade path
+        # ponytail: table = columns split by 2+ spaces in layout mode, one header per document;
+        # breaks on empty cells, pdfplumber extract_tables is the upgrade path
         prose = []
+        last = None  # (cells, starts) of the header/row right above, for wrapped cells
         for line in layout.splitlines():
-            cells = re.split(r"\s{2,}", line.strip())
-            if header is None and len(cells) >= 4 and not any(c.isdigit() for c in line):
+            spans = [(m.start(), m.group()) for m in re.finditer(r"\S+(?: \S+)*", line)]
+            cells = [text for _, text in spans]
+            if not cells:
+                last = None
+            elif last and len(cells) < len(last[0]):
+                # wrapped cell: each piece belongs to the column that starts closest to it
+                target, starts = last
+                for start, text in spans:
+                    column = min(range(len(starts)), key=lambda i: abs(starts[i] - start))
+                    target[column] += " " + text
+            elif header is None and len(cells) >= 3 and not any(c.isdigit() for c in line):
                 header = cells
+                last = (header, [start for start, _ in spans])
             elif header and len(cells) >= len(header) - 1:
-                # one short text per cell: whole rows look alike to the embedding model
-                # ponytail: «+N» rows (A-07, C-16, H-11…) are indexed alone, without their base case.
-                # Si está a más de 200 km: padre en España = 3 (H-03) + 2 (H-11) = 5 días, but the
-                # "+2" chunk alone can make the RAG answer "2 días".
-                # Upgrade path: append the base row when Notas says "Se suma al supuesto base".
-                for column, value in zip(header[2:], cells[2:]):
-                    text = f"{cells[1]} · {column}: {value}"
-                    pages.append(PageText(text=text, page=number))
-            elif line.strip():
+                rows.append((number, cells))
+                last = (cells, [start for start, _ in spans])
+            else:
                 prose.append(" ".join(line.split()))
+                last = None
         if prose:
             pages.append(PageText(text="\n".join(prose), page=number))
+
+    # «+N» rows noted "Se suma al supuesto base" (A-07, H-11, H-12) are also written into their
+    # base cells: "por fallecimiento (>200 km)" applies to every "Fallecimiento de …" row.
+    # ponytail: only rows with that note; B-05/B-06/C-16 «+N» stay alone
+    additive = {}
+    for _, cells in rows:
+        if cells[-1] == "Se suma al supuesto base" and " por " in cells[1]:
+            topic = cells[1].split(" por ", 1)[1].split()[0].capitalize() + " de "
+            additive.setdefault(topic, []).append(cells)
+
+    for number, cells in rows:
+        # one short text per cell: whole rows look alike to the embedding model
+        label = f"{cells[0]} {cells[1]}"
+        extras = [add for topic, adds in additive.items() if cells[1].startswith(topic) for add in adds]
+        for i, (column, value) in enumerate(zip(header[2:], cells[2:]), start=2):
+            text = f"{label} · {column}: {value}"
+            for add in extras:
+                plus = add[i].lstrip("+")
+                if value.isdigit() and int(value) and plus.isdigit() and int(plus):
+                    text += f". {add[1]} ({add[0]}): {add[i]} = {int(value) + int(plus)} días"
+            pages.append(PageText(text=text, page=number))
     return pages
 
 

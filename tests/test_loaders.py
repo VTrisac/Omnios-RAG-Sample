@@ -53,5 +53,29 @@ def test_scanned_pdf_falls_back_to_ocr():
 def test_pdf_table_rows_carry_column_names():
     pages = load_document(config.DATA_DIR / "politica_permisos_retribuidos_grupo_norvent_2024.pdf")
 
-    assert any(p.text == "Fallecimiento de abuelo/a · Chile: 1" for p in pages)
-    assert any(p.text == "Desplazamiento adicional por fallecimiento (>200 km) · España: +2" for p in pages)
+    assert any(p.text == "H-11 Desplazamiento adicional por fallecimiento (>200 km) · España: +2" for p in pages)
+    assert any(p.text == "A-01 Matrimonio del empleado/a · España: 15" for p in pages)
+
+
+def test_pdf_additive_rows_are_added_to_their_base_case():
+    pages = load_document(config.DATA_DIR / "politica_permisos_retribuidos_grupo_norvent_2024.pdf")
+
+    assert any(
+        p.text.startswith("H-05 Fallecimiento de abuelo/a · Chile: 1. ")
+        and "(H-11): +2 = 3 días" in p.text
+        for p in pages
+    )
+
+
+def test_pdf_wrapped_cells_are_joined():
+    iberflex = load_document(config.DATA_DIR / "auditoria_proveedor_iberflex_2024.pdf")
+    report = load_document(config.DATA_DIR / "IT-2024-041_informe_tecnico.pdf")
+
+    assert any(
+        p.text.startswith("NC-PRV-2024-021 Mayor · Descripción: Uso de compuesto")
+        and p.text.endswith("sin notificación a Norvent")
+        for p in iberflex
+    )
+    assert any(
+        p.text.endswith("Riesgo estimado: Fallo prematuro de rodamiento en 800-2.000 h") for p in report
+    )
