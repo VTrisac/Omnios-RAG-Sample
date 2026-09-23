@@ -54,3 +54,4 @@ def test_pdf_table_rows_carry_column_names():
     pages = load_document(config.DATA_DIR / "politica_permisos_retribuidos_grupo_norvent_2024.pdf")
 
     assert any(p.text == "Fallecimiento de abuelo/a · Chile: 1" for p in pages)
+    assert any(p.text == "Desplazamiento adicional por fallecimiento (>200 km) · España: +2" for p in pages)
