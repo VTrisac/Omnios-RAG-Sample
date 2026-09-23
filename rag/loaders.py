@@ -66,7 +66,8 @@ def _load_pdf(path: Path) -> list[PageText]:
             elif header and len(cells) >= len(header) - 1:
                 # one short text per cell: whole rows look alike to the embedding model
                 # ponytail: «+N» rows (A-07, C-16, H-11…) are indexed alone, without their base case.
-                # So "más de 200 km, +2 (H-11): 3 días" is how a RAG learns that 3 + 2 = 3.
+                # Si está a más de 200 km: padre en España = 3 (H-03) + 2 (H-11) = 5 días, but the
+                # "+2" chunk alone can make the RAG answer "2 días".
                 # Upgrade path: append the base row when Notas says "Se suma al supuesto base".
                 for column, value in zip(header[2:], cells[2:]):
                     text = f"{cells[1]} · {column}: {value}"
