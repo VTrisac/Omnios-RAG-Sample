@@ -13,8 +13,7 @@ pip install -r requirements.txt
 brew install tesseract tesseract-lang   # Debian/Ubuntu: apt install tesseract-ocr tesseract-ocr-spa
 ```
 
-Las páginas de PDF sin capa de texto (escaneos, diagramas) se transcriben con visión de Claude si
-`ANTHROPIC_API_KEY` está definida; si no, con OCR (Tesseract). Tras cambiar de modo, `--reindex`.
+Las páginas de PDF sin capa de texto (escaneos) se leen con OCR (Tesseract, español).
 
 ## Uso
 
